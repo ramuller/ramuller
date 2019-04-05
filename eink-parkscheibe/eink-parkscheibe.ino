@@ -229,7 +229,7 @@ uint8_t dst(Time *t)
   uint8_t dst = 0; // Normal time
   if(t->mon < 10 && t->mon > 3)  // summer time anyway
     dst = 1;
-  else if(t->mon == 3 && (t->date - dow(t) >= 24)) // After last Sunday in March
+  else if(t->mon == 3 && (t->date + t->dow > 30)) // After last Sunday in March
     dst = 1;
   else if(t->mon == 10 && (t->date  - dow(t) < 24)) // Before last Sunday in Oct
     dst = 1;
