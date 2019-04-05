@@ -283,7 +283,7 @@ void loop() {
   Time t = rtc.getTime();
   // print_time(&t);
   // Daylight saving
-  // t.hour = (t.hour + dst(&t)) % 24;
+  t.hour = (t.hour + dst(&t)) % 24;
   // print_time(&t);
   if(lastmin != t.min / UPDATE_EVER_MINUTES){
     lastmin = (t.min / UPDATE_EVER_MINUTES);
