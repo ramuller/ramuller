@@ -25,6 +25,11 @@ typedef struct motor {
 #define MOTOR_BACK       0
 #define MOTOR_FRONT      1
 
+#define MIN_SPEED       100
+#define MAX_SPEED       255     
+#define ACCEL           50
+
+#define FRONT_WALL_PIN  5
 
 motor  all_motors[] = {
   {
@@ -56,6 +61,7 @@ void setup() {
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
   all_motor_init();
+  pinMode(FRONT_WALL_PIN, INPUT);
 }
 
 void all_motor_init() {
@@ -119,19 +125,34 @@ void loop() {
 
   Serial.println("Motor speedup");
   
-  for(int i = 100; i < 255; i++){
-    motorCTRL(0, BACK, i);
-    delay(4);
+ int val = digitalRead(FRONT_WALL_PIN); // read the input pin
+ Serial.print("Value of a2 :");
+ Serial.println(val);          // debug value
+ for(int i = MIN_SPEED; i < MAX_SPEED; i += ACCEL){
+    motorCTRL(0, FORE, i);
+    delay(ACCEL * 10);
   }
   Serial.println("Motor speed down");
-  for(int i = 255; i >= 100; --i){
-    motorCTRL(0, BACK, i);
-    delay(4);
+  for(int i = MAX_SPEED; i >= MIN_SPEED; i -= ACCEL){
+    motorCTRL(0, FORE, i);
+    delay(ACCEL * 10);
   }
   motorCTRL(0, STOP, 0);
-  
   delay(1000);
   
+ for(int i = MIN_SPEED; i < MAX_SPEED; i += ACCEL){
+    motorCTRL(0, BACK, i);
+    delay(ACCEL * 10);
+  }
+  Serial.println("Motor speed down");
+  for(int i = MAX_SPEED; i >= MIN_SPEED; i -= ACCEL){
+    motorCTRL(0, BACK, i);
+    delay(ACCEL * 10);
+  }
+  motorCTRL(0, STOP, 0);
+  delay(1000);
+  
+
   
   // put your main code here, to run repeatedly:   
 //  analogWrite(9, 150); //ENA pin
