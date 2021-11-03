@@ -14,6 +14,7 @@ typedef struct motor {
   int mspeed;  // 0 - 255
 } motor;
 
+#if 0
 #define MOTOR1_PIN1      2
 #define MOTOR1_PIN2      3
 #define MOTOR1_SPEED     9
@@ -21,6 +22,25 @@ typedef struct motor {
 #define MOTOR2_PIN1      4
 #define MOTOR2_PIN2      5
 #define MOTOR2_SPEED     10
+
+#else // ESP32
+
+#define LED_BUILTIN      25
+
+// PWM related setting
+#define PWM1_Ch    0
+#define PWM1_Res   8
+#define PWM1_Freq  500
+
+#define MOTOR1_PIN1      12
+#define MOTOR1_PIN2      14
+#define MOTOR1_SPEED     27 
+#// 23
+
+#define MOTOR2_PIN1      36
+#define MOTOR2_PIN2      39
+#define MOTOR2_SPEED     35
+#endif
 
 #define MOTOR_BACK       0
 #define MOTOR_FRONT      1
@@ -73,7 +93,11 @@ void all_motor_init() {
     Serial.println("All outputs");
     pinMode(all_motors[i].pin1, OUTPUT);
     pinMode(all_motors[i].pin2, OUTPUT);
-    pinMode(all_motors[i].pin_speed, OUTPUT);
+    // pinMode(all_motors[i].pin_speed, OUTPUT);
+    pinMode(all_motors[i].pin2, OUTPUT);
+    ledcAttachPin(all_motors[i].pin_speed, PWM1_Ch);
+    ledcSetup(PWM1_Ch, PWM1_Freq, PWM1_Res);
+   
   }
    
 }
@@ -87,18 +111,21 @@ void motorCTRL(int m, DIR dir, int s)
     Serial.println("Motor FORE" + m);
     digitalWrite(all_motors[m].pin1, HIGH);
     digitalWrite(all_motors[m].pin2, LOW);
-    analogWrite(all_motors[m].pin_speed, s);
+    // analogWrite(all_motors[m].pin_speed, s);
+    ledcWrite(all_motors[m].pin_speed, s);
   } else if(dir == BACK){
     Serial.println("Motor BACK");
     digitalWrite(all_motors[m].pin1, LOW);
     digitalWrite(all_motors[m].pin2, HIGH);
-    analogWrite(all_motors[m].pin_speed, s);
+    // analogWrite(all_motors[m].pin_speed, s);
+    ledcWrite(all_motors[m].pin_speed, s);
     all_motors[m].mspeed = s;
   } else {
     Serial.println("Motor STOP");
     digitalWrite(all_motors[m].pin1, LOW);
     digitalWrite(all_motors[m].pin2, LOW);
-    digitalWrite(all_motors[m].pin_speed, 0);
+    // digitalWrite(all_motors[m].pin_speed, 0);
+    ledcWrite(all_motors[m].pin_speed, s);
     all_motors[m].mspeed = 0;
   }
 }
