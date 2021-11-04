@@ -3,7 +3,7 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 
-const char* ssid = "bvb09";
+const char* ssid = "bvb11";
 const char* password = "Stenbocke 14b";
 
 void setup() {
