@@ -45,6 +45,9 @@ const char* loginIndex =
         "<tr>"
             "<td><input type='submit' onclick='check(this.form)' value='Login'></td>"
         "</tr>"
+        "<tr>"
+            "<td><input type='submit' onclick='start(this.form)' value='Start Barcar'></td>"
+        "</tr>"
     "</table>"
 "</form>"
 "<script>"
@@ -63,6 +66,11 @@ const char* loginIndex =
     " alert('Error Password or Username')/*displays error message*/"
     "}"
     "}"
+    "function start(form)"
+    "{"
+    "window.open('/runBarcar')"
+    /* " alert('No clue how to start barcar')" */
+    "}"
 "</script>";
 
 
@@ -78,7 +86,7 @@ const char* runBarcar =
 "<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js'></script>"
 "<form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>"
    "<input type='file' name='justfor testing'>"
-        "<input type='submit' value='Run barcar'>"
+        "<input type='submit' value='Barcar is running'>"
     "</form>"
  "<div id='prg'>progress: 0%</div>";
 
@@ -126,7 +134,11 @@ const char* serverIndex =
 
 void barCarFunc(void);
 void barCarFunc(void) {
-  Serial.printf("Counter : %d\n", barCarcount++);
+  while (1){
+    Serial.printf("Counter : %d\n", barCarcount++);
+    server.handleClient();
+    delay(1000);
+  }
 }
 
 /*
@@ -169,7 +181,7 @@ void setup(void) {
   });
   server.on("/runBarcar", HTTP_GET, []() {
     server.sendHeader("Connection", "close");
-    // server.send(200, "text/html", runBarcar);
+    server.send(200, "text/html", runBarcar);
     barCarFunc();
   });
   /*handling uploading firmware file */
@@ -198,6 +210,7 @@ void setup(void) {
     }
   });
   server.begin();
+  Serial.println(loginIndex);
 }
 void loop(void) {
   server.handleClient();
