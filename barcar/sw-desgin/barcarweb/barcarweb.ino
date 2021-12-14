@@ -14,7 +14,7 @@ const char* password = "Stenbocke 14b";
 WebServer server(80);
 
 int barCarcount = 1;
-
+int barCarIsRunning = false;
 /*
  * Login page
  */
@@ -78,20 +78,67 @@ const char* loginIndex = R""""(
 )"""";
 
 
+const char* startIndex = R""""(
+  <form name='startForm'>
+    <table width='20%' bgcolor='A09F9F' align='center'>
+        <tr>
+            <td><input type='submit' onclick='start(this.form)' value='Start Barcar'></td>
+        </tr>
+        <tr>
+            <td><input type='submit' onclick='update(this.form)' value='Update SW'></td>
+        </tr>
+        <tr>
+            <td><input type='submit' onclick='testing(this.form)' value='testing'></td>
+        </tr>
+    </table>
+  </form>
+  <script>
+  function start(form)
+  {
+    window.close()
+    window.open('/startBarCar')
+  }
+  function update(form)
+  {
+    window.open('/serverIndex')
+  }
+  function testing(form)
+  {
+    window.open('/testing')
+  }
+</script>;
+)"""";
 
-
-
-/*
- * Server Index Page
- */
-
-const char* runBarcar =
-"<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js'></script>"
-"<form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>"
-   "<input type='file' name='justfor testing'>"
-        "<input type='submit' value='Barcar is running'>"
-    "</form>"
- "<div id='prg'>progress: 0%</div>";
+const char* stopIndex = R""""(
+  <form name='startForm'>
+    <table width='20%' bgcolor='A0F000' align='center'>
+        <tr>
+            <td><input type='submit' onclick='stop(this.form)' value='Stop Barcar'></td>
+        </tr>
+        <tr>
+            <td><input type='submit' onclick='update(this.form)' value='Update SW'></td>
+        </tr>
+        <tr>
+            <td><input type='submit' onclick='testing(this.form)' value='testing'></td>
+        </tr>
+    </table>
+  </form>
+  <script>
+  function stop(form)
+  {
+    window.close()
+    window.open('/')
+  }
+  function update(form)
+  {
+    window.open('/serverIndex')
+  }
+  function testing(form)
+  {
+    window.alert('Bar car will run intil you press')
+  }
+</script>;
+)"""";
 
 
 /*
@@ -104,7 +151,14 @@ const char* serverIndex = R""""(
    <input type='file' name='update'>
         <input type='submit' value='Update'>
    </form>
- <div id='prg'>progress: 0%</div>
+ <form name='loginForm'>
+    <table width='20%' bgcolor='A09F9F' align='center'>
+        <tr>
+            <td><input type='submit' onclick='start(this.form)' value='Start Barcar'></td>
+        </tr>
+    </table>
+</form>
+<div id='prg'>progress: 0%</div>
  <script>
   $('form').submit(function(e){
   e.preventDefault();
@@ -136,13 +190,27 @@ const char* serverIndex = R""""(
  </script>;
 )"""";
 
-void barCarFunc(void);
-void barCarFunc(void) {
-  while (1){
-    Serial.printf("Counter : %d\n", barCarcount++);
-    server.handleClient();
-    delay(1000);
-  }
+void barCarFunc(boolean);
+void barCarFunc(boolean state) {
+  Serial.printf("Set running state to %d\n", state);
+  barCarIsRunning = state;
+}
+
+void homePage(){
+    server.send(200, "text/html", startIndex);
+    Serial.printf("Home page clicked stopping barcar\n");
+    barCarFunc(0);
+}
+
+void startBarCar(){
+    server.send(200, "text/html", stopIndex);
+    Serial.printf("Home page clicked starting barcar\n");
+    barCarFunc(1);
+}
+
+void testing(){
+    server.send(200, "text/plain", "hello from esp32!");
+    Serial.printf("Testing\n");
 }
 
 /*
@@ -175,18 +243,23 @@ void setup(void) {
   }
   Serial.println("mDNS responder started.");
   /*return index page which is stored in serverIndex */
-  server.on("/", HTTP_GET, []() {
+  server.on("/", homePage);
+  server.on("/startBarCar", startBarCar);
+  server.on("/testing", testing);
+  
+  server.on("/bla", HTTP_GET, []() {
     server.sendHeader("Connection", "close");
-    server.send(200, "text/html", loginIndex);
+    server.send(200, "text/html", startIndex);
+    barCarFunc(1);
   });
   server.on("/serverIndex", HTTP_GET, []() {
     server.sendHeader("Connection", "close");
     server.send(200, "text/html", serverIndex);
   });
-  server.on("/runBarcar", HTTP_GET, []() {
+  server.on("/startIndex", HTTP_GET, []() {
     server.sendHeader("Connection", "close");
-    server.send(200, "text/html", runBarcar);
-    barCarFunc();
+    server.send(200, "text/html", stopIndex);
+    barCarFunc(0);
   });
   /*handling uploading firmware file */
   server.on("/update", HTTP_POST, []() {
@@ -214,9 +287,15 @@ void setup(void) {
     }
   });
   server.begin();
-  Serial.println(loginIndex);
+  // Serial.println(loginIndex);
 }
 void loop(void) {
   server.handleClient();
+  if (barCarIsRunning != 0){
+    Serial.printf("Counter : %d\n", barCarcount++);
+    server.handleClient();
+    server.send(200, "text/plain", "hello from esp32!");
+    delay(1000);
+  }
   delay(1);
 }
