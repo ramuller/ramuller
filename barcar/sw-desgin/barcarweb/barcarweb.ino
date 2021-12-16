@@ -1,11 +1,12 @@
-#include <SPIFFS.h>
-
-
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <Update.h>
+
+#define IM_A_SLAVE 1
+
+#include "2-wheel-car.h"
 
 const char* host = "esp32";
 const char* ssid = "bvb11";
@@ -15,6 +16,20 @@ WebServer server(80);
 
 int barCarcount = 1;
 int barCarIsRunning = false;
+
+// #include <Serial.h>
+
+
+/*
+ * 
+ * *************************************************
+ * 
+ * BAR CAR
+ *  
+ * 
+ */
+
+
 /*
  * Login page
  */
