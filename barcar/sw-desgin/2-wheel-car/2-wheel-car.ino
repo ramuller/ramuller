@@ -5,14 +5,15 @@
 void all_motor_init();
 
 
-enum DIR {
+enum CAR_DIR {
   STOP = 0,
   BACK = 2,
   FORE = 1
 };
 
-#define MIN_SPEED       74
-#define MAX_SPEED       120     
+#define MIN_SPEED       80
+#define MAX_SPEED       90     
+// #define MAX_SPEED       255
 #define ACCEL_DELAY     1000
 #define ACCEL           (MAX_SPEED - MIN_SPEED) / 2
 
@@ -26,7 +27,7 @@ typedef struct motor_t {
   int pin2;
   int pin_speed;
   int pwm_ch, pwm_res, pwm_freq;
-  DIR dir;      // -1 = back, 0 = stop; 1 = fore
+  CAR_DIR dir;      // -1 = back, 0 = stop; 1 = fore
   int cur_speed;  // current speed 0 - 255
 } motor_t;
 
@@ -58,6 +59,7 @@ motor_t  motor[] = {
  * ADC table
  * 2.796V = 3210
  * 2.771V = 3160
+ * 2.646V = 3045
  */
 
 #ifdef IM_A_SLAVE
@@ -92,10 +94,10 @@ void all_motor_init() {
    
 }
 
-void motorCTRL(int m, DIR dir, int s)
+void motorCTRL(int m, CAR_DIR dir, int s)
 {
   // Serial.printf("Motor ctrl pins : %d, %d, %d\n", motor[m].pin1, motor[m].pin2, motor[m].pin_speed);
-  Serial.printf("Motor pin val : 1(%d), 2(%d) ; Speed(%d)\n", motor[m].dir & 1, (motor[m].dir >> 1 & 1), s);
+  // Serial.printf("Motor pin val : 1(%d), 2(%d) ; Speed(%d)\n", motor[m].dir & 1, (motor[m].dir >> 1 & 1), s);
   ledcWrite(motor[m].pwm_ch, s);
   motor[m].dir = dir;
   motor[m].cur_speed = s;
@@ -121,10 +123,11 @@ void motorCTRL(int m, DIR dir, int s)
 
 void printSensors()
 {
-  Serial.printf("Sensor front - back : %d - %d , ADC %d\n", digitalRead(FRONT_WALL_PIN), digitalRead(BACK_WALL_PIN) , analogRead(ADC));
+  Serial.printf("Sensor front - back : %d - %d , ADC %d %2.2f V \n", digitalRead(FRONT_WALL_PIN), digitalRead(BACK_WALL_PIN) , analogRead(ADC), (float)analogRead(ADC) * 0.000871028037383);
 }
 
 void check(){
+  printSensors();
   while(digitalRead(FRONT_WALL_PIN) == 0 && digitalRead(BACK_WALL_PIN) == 0){
     Serial.printf("Emergency STOP!!!\n");
     printSensors();
@@ -133,7 +136,14 @@ void check(){
   }
 }
 
-void driveCar(DIR dir, int sensor){
+void driveCar(CAR_DIR dir, int sensor){
+#ifdef IM_A_SLAVE
+  server.handleClient();
+  if(barCarIsRunning == 0){
+    motorCTRL(0, STOP, 0);
+    return;
+  }
+#endif
   Serial.println("Motor speedup");
   motorCTRL(0, STOP, 0);
   for(int i = MIN_SPEED; i < MAX_SPEED; i += ACCEL){
@@ -145,6 +155,13 @@ void driveCar(DIR dir, int sensor){
   }
   while(digitalRead(sensor) == 1){
     printSensors();
+#ifdef IM_A_SLAVE
+    server.handleClient();
+    if(barCarIsRunning == 0){
+      motorCTRL(0, STOP, 0);
+      return;
+   }
+#endif
     delay(200);
   }
   Serial.println("Motor speed down");
@@ -164,16 +181,16 @@ void loop() {
   
   printSensors();
   motorCTRL(0, STOP, 0);
-  if (digitalRead(FRONT_WALL_PIN) == LOW){
+  if (digitalRead(FRONT_WALL_PIN) == HIGH){
+    Serial.println("Go forward!\n");
     driveCar(FORE, FRONT_WALL_PIN);
-   delay(1000);
- } else {
-      driveCar(BACK, BACK_WALL_PIN);
+    Serial.println("Go forward! ends\n");
+    delay(1000);
+  } 
+  if (digitalRead(BACK_WALL_PIN) == HIGH){
+    Serial.println("Go forward!\n");
+    driveCar(BACK, BACK_WALL_PIN);
     delay(1000);
   }
-
-  driveCar(BACK, BACK_WALL_PIN);
-  delay(1000);
-
   return;
 }

@@ -1,12 +1,13 @@
+#include <vfs_api.h>
+#include <FSImpl.h>
+#include <FS.h>
+
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <Update.h>
 
-#define IM_A_SLAVE 1
-
-#include "2-wheel-car.h"
 
 const char* host = "esp32";
 const char* ssid = "bvb11";
@@ -16,6 +17,9 @@ WebServer server(80);
 
 int barCarcount = 1;
 int barCarIsRunning = false;
+
+#define IM_A_SLAVE 1
+#include "2-wheel-car.h"
 
 // #include <Serial.h>
 
@@ -270,14 +274,16 @@ void setup(void) {
   server.on("/serverIndex", HTTP_GET, []() {
     server.sendHeader("Connection", "close");
     server.send(200, "text/html", serverIndex);
+    barCarFunc(0);
   });
-  server.on("/startIndex", HTTP_GET, []() {
+  server.on("/startIndex2", HTTP_GET, []() {
     server.sendHeader("Connection", "close");
     server.send(200, "text/html", stopIndex);
     barCarFunc(0);
   });
   /*handling uploading firmware file */
   server.on("/update", HTTP_POST, []() {
+    barCarFunc(0);
     server.sendHeader("Connection", "close");
     server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
     ESP.restart();
@@ -302,15 +308,16 @@ void setup(void) {
     }
   });
   server.begin();
+  slave_setup();
   // Serial.println(loginIndex);
 }
 void loop(void) {
   server.handleClient();
   if (barCarIsRunning != 0){
     Serial.printf("Counter : %d\n", barCarcount++);
-    server.handleClient();
-    server.send(200, "text/plain", "hello from esp32!");
-    delay(1000);
+    slave_loop();
+  } else {
+    motorCTRL(0, STOP, 0);
   }
   delay(1);
 }
