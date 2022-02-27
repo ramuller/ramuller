@@ -1,0 +1,3 @@
+#!/bin/bash
+
+20 5 * * * /local/data/src/service.takealug.epg-grabber/upgrade-epg.sh
