@@ -12,7 +12,7 @@ enum DIR {
 };
 
 #define MIN_SPEED       74
-#define MAX_SPEED       120     
+#define MAX_SPEED       110     
 #define ACCEL_DELAY     1000
 #define ACCEL           (MAX_SPEED - MIN_SPEED) / 2
 
@@ -148,11 +148,13 @@ void driveCar(DIR dir, int sensor){
     delay(200);
   }
   Serial.println("Motor speed down");
+/*  
   for(int i = MAX_SPEED; i >= MIN_SPEED && 0; i -= ACCEL){
     check();
      motorCTRL(0, dir, i);
     delay(ACCEL_DELAY);
   }
+  */
   motorCTRL(0, STOP, 0);
 }
 #ifdef IM_A_SLAVE
