@@ -1,0 +1,14 @@
+[Unit]
+Description=Start raspberry parking disk on EINK
+After=networking.service
+
+[Service]
+Type=simple
+PIDFile=/run/.pid
+ExecStart=/opt/parkdisk-raspberry/parking.py
+TimeoutSec=15
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
