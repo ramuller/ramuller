@@ -136,8 +136,8 @@ void setup() {
   rtc.begin();
   // The following lines can be uncommented to set the date and time
 #if 0
-  rtc.setTime(21,12, 00);     // Set the time to hh:mm:ss (24hr format)
-  rtc.setDate(06, 11, 2018);   // Set the date to day, month, year
+  rtc.setTime(18, 03, 00);     // Set the time to hh:mm:ss (24hr format)
+  rtc.setDate(9, 04, 2019);   // Set the date to day, month, year
   rtc.setDOW();     // Set Day-of-Week to automatic
 #endif
 
@@ -281,7 +281,7 @@ void loop() {
   color c;
   
   Time t = rtc.getTime();
-  // print_time(&t);
+  print_time(&t);
   // Daylight saving
   t.hour = (t.hour + dst(&t)) % 24;
   // print_time(&t);
